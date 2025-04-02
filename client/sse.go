@@ -104,7 +104,7 @@ func (c *SSEMCPClient) Start(ctx context.Context) error {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	go c.readSSE(resp.Body)
+	go c.readSSE(ctx, resp.Body)
 
 	// Wait for the endpoint to be received
 
@@ -122,14 +122,11 @@ func (c *SSEMCPClient) Start(ctx context.Context) error {
 
 // readSSE continuously reads the SSE stream and processes events.
 // It runs until the connection is closed or an error occurs.
-func (c *SSEMCPClient) readSSE(reader io.ReadCloser) {
+func (c *SSEMCPClient) readSSE(ctx context.Context, reader io.ReadCloser) {
 	defer reader.Close()
 
 	br := bufio.NewReader(reader)
 	var event, data string
-
-	ctx, cancel := context.WithTimeout(context.Background(), c.sseReadTimeout)
-	defer cancel()
 
 	for {
 		select {
